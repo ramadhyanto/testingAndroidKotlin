@@ -14,7 +14,7 @@ class GenreAdapter(var ListGenre: List<GenresItem?>) : RecyclerView.Adapter<Genr
     lateinit var listener: OnItemClickListener
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, p1: Int): ViewHolder {
-        return ViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.item_movie, viewGroup, false))
+        return ViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.item_genre, viewGroup, false))
     }
 
     override fun getItemCount(): Int = ListGenre.size
@@ -37,7 +37,7 @@ class GenreAdapter(var ListGenre: List<GenresItem?>) : RecyclerView.Adapter<Genr
     }
 
     class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
-        private val movieName = itemView.movie_name
+        private val movieName = itemView.genre_name
 
         fun bindGenre(movieResponse: GenresItem) {
             movieName.text = movieResponse.name

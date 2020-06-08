@@ -11,6 +11,6 @@ interface GenreContracts {
 
     interface view {
         fun showData(data:List<GenresItem?>)
-        fun showToast()
+        fun showToast(params:String)
     }
 }

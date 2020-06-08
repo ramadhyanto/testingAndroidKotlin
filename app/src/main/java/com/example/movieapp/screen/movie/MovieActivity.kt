@@ -15,11 +15,14 @@ import com.example.movieapp.screen.detail.DetailMovieActivity
 import com.example.movieapp.screen.genre.GenreAdapter
 import com.example.movieapp.screen.genre.GenreContracts
 import com.example.movieapp.screen.genre.GenrePresenterImpl
+import com.example.movieapp.utilities.BaseActivity
 import kotlinx.android.synthetic.main.activity_genre.*
 import kotlinx.android.synthetic.main.activity_movie.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 
-class MovieActivity : AppCompatActivity(), MovieContracts.view {
+class MovieActivity : BaseActivity(), MovieContracts.view {
 
     var presenter: MoviePresenterImpl? = MoviePresenterImpl(this)
     var genreId = 0
@@ -27,6 +30,9 @@ class MovieActivity : AppCompatActivity(), MovieContracts.view {
     private var page by Delegates.notNull<Int>()
     private var totalPage by Delegates.notNull<Int>()
     private var isLoading by Delegates.notNull<Boolean>()
+
+    var resultData: ArrayList<ResultsItem?> = ArrayList()
+    var passingData: List<ResultsItem?> = ArrayList()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_movie)
@@ -35,14 +41,13 @@ class MovieActivity : AppCompatActivity(), MovieContracts.view {
         page = 1
         totalPage = 0
         initialLoad()
-        initListener()
         rvMovie.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val linearLayoutManager = recyclerView?.layoutManager as LinearLayoutManager
                 val countItem = linearLayoutManager?.itemCount
                 val lastVisiblePosition = linearLayoutManager?.findLastCompletelyVisibleItemPosition()
                 val isLastPosition = countItem.minus(1) == lastVisiblePosition
-                if (!isLoading && isLastPosition && page < 50) {
+                if (!isLoading && isLastPosition && page < totalPage) {
                     showLoading(true)
                     page = page.let { it.plus(1) }
                     initialLoad()
@@ -53,14 +58,20 @@ class MovieActivity : AppCompatActivity(), MovieContracts.view {
     }
 
     fun initialLoad() {
-        Log.e("message","page $page")
-
         showLoading(true)
-        presenter?.loadMovie(genreId, page)
+        coroutineScope.launch(Dispatchers.Main) {
+            if(isInternetAvailable()) {
+                presenter?.loadMovie(genreId, page)
+            } else {
+                showToast("Maaf Koneksi Tidak Tersedia")
+            }
+        }
+
     }
 
     override fun showData(data: List<ResultsItem?>) {
         hideLoading()
+        totalPage = data.size
         if(page == 1) {
             val movieAdapter = MovieAdapter(data)
             rvMovie.apply {
@@ -79,29 +90,24 @@ class MovieActivity : AppCompatActivity(), MovieContracts.view {
             })
             movieAdapter.notifyDataSetChanged()
         } else {
-            Log.e("message","dataNew $data")
-            val movieAdapter = MovieAdapter(data)
-            movieAdapter.refreshAdapter(data)
-        }
-
-
-
-    }
-
-    private fun initListener() {
-        rvMovie.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                val linearLayoutManager = recyclerView?.layoutManager as LinearLayoutManager
-                val countItem = linearLayoutManager?.itemCount
-                val lastVisiblePosition = linearLayoutManager?.findLastCompletelyVisibleItemPosition()
-                val isLastPosition = countItem.minus(1) == lastVisiblePosition
-                if (!isLoading && isLastPosition && page < totalPage) {
-                    showLoading(true)
-                    page = page.let { it.plus(1) }
-                    initialLoad()
+            if(resultData.isNullOrEmpty()) {
+                for (i in 1..data.size -1) {
+                    resultData.add(data[i])
+                }
+            } else {
+                for (i in 1..resultData.size -1){
+                    resultData.add(data[i])
                 }
             }
-        })
+            passingData = resultData.toList()
+            val movieAdapter = MovieAdapter(passingData)
+            rvMovie.apply {
+                layoutManager = LinearLayoutManager(this@MovieActivity)
+                adapter = movieAdapter
+            }
+            movieAdapter.notifyDataSetChanged()
+        }
+
     }
 
     private fun showLoading(isRefresh: Boolean) {
@@ -130,7 +136,7 @@ class MovieActivity : AppCompatActivity(), MovieContracts.view {
         startActivity(intent)
     }
 
-    override fun showToast() {
-        Toast.makeText(this, "Maaf Data Tidak Tersedia", Toast.LENGTH_LONG).show()
+    override fun showToast(params:String) {
+        Toast.makeText(this, params, Toast.LENGTH_LONG).show()
     }
 }

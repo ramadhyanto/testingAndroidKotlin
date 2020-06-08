@@ -32,6 +32,6 @@ class GenrePresenterImpl (
     }
 
     fun parseError() {
-        view?.showToast()
+        view?.showToast("Maaf Data Tidak Tersedia")
     }
 }

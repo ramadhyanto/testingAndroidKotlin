@@ -11,6 +11,6 @@ interface MovieContracts {
 
     interface view {
         fun showData(data:List<ResultsItem?>)
-        fun showToast()
+        fun showToast(params:String)
     }
 }

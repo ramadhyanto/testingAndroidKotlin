@@ -21,7 +21,6 @@ class MoviePresenterImpl( var view: MovieContracts.view?) {
         val disposable = call.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ data ->
-                Log.e("message","databaru $data")
                 view?.showData(data.results!!)
             }, { error ->
                 Log.e("message","message $error")
@@ -30,7 +29,7 @@ class MoviePresenterImpl( var view: MovieContracts.view?) {
         compositeDisposable.add(disposable)
     }
     fun parseError() {
-        view?.showToast()
+        view?.showToast("Maaf Data Tidak Tersedia")
     }
 
 }

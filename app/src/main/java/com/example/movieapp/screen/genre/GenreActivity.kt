@@ -11,9 +11,12 @@ import com.example.movieapp.R
 import com.example.movieapp.model.GenreResponse
 import com.example.movieapp.model.GenresItem
 import com.example.movieapp.screen.movie.MovieActivity
+import com.example.movieapp.utilities.BaseActivity
 import kotlinx.android.synthetic.main.activity_genre.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class GenreActivity : AppCompatActivity() , GenreContracts.view{
+class GenreActivity : BaseActivity() , GenreContracts.view{
 
     var presenter: GenrePresenterImpl? = GenrePresenterImpl(this)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,7 +27,14 @@ class GenreActivity : AppCompatActivity() , GenreContracts.view{
     }
 
     fun initialLoad() {
-        presenter?.loadGenre()
+        coroutineScope.launch(Dispatchers.Main) {
+            if(isInternetAvailable()) {
+                presenter?.loadGenre()
+            } else {
+                showToast("Maaf Koneksi Tidak Tersedia")
+            }
+        }
+
     }
 
     override fun showData(data: List<GenresItem?>) {
@@ -53,7 +63,7 @@ class GenreActivity : AppCompatActivity() , GenreContracts.view{
         startActivity(intent)
     }
 
-    override fun showToast() {
-        Toast.makeText(this, "Maaf Data Tidak Tersedia", Toast.LENGTH_LONG).show()
+    override fun showToast(params: String) {
+        Toast.makeText(this, params, Toast.LENGTH_LONG).show()
     }
 }
